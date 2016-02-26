@@ -8,3 +8,4 @@
 
 GuildStoreTools.lua
 GuildStoreTools.xml
+LibCustomMenu/LibCustomMenu.lua

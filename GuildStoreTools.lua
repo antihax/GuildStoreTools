@@ -1,5 +1,5 @@
 local addonName = "GuildStoreTools"
-local versionString = "v0.0.1"
+local versionString = "v0.1.5"
 local serverName = ""
 local GST_Original_ZO_LinkHandler_OnLinkMouseUp 
 
@@ -10,8 +10,6 @@ local function getServerName()
   local serverName = string.sub(uniqueName, 1, string.find(uniqueName, charName)-2)
   return serverName
 end
-
-local selectedItem
 
  -- Main entrypoint
 function GUILDSTORETOOLS_addonLoaded(eventCode, name)
@@ -27,8 +25,27 @@ function GUILDSTORETOOLS_addonLoaded(eventCode, name)
     GUILDSTORETOOLS_LinkHandler_OnLinkMouseUp(iL, b, c) end
 
   ZO_PreHookHandler(ItemTooltip, "OnUpdate", function(c, ...) GUILDSTORETOOLS_OnTooltip(c) end)
+  ZO_PreHookHandler(ItemTooltip, "OnHide",   function(c, ...) GUILDSTORETOOLS_OnHideTooltip(c) end)
+  
+  ZO_PreHook("ZO_InventorySlot_ShowContextMenu", function(c) GUILDSTORETOOLS_InventoryContextMenu(c) end)
 end
 EVENT_MANAGER:RegisterForEvent("GuildStoreTools", EVENT_ADD_ON_LOADED, GUILDSTORETOOLS_addonLoaded)
+
+function GUILDSTORETOOLS_InventoryContextMenu(c)
+  zo_callLater(function() 
+    AddCustomSubMenuItem("|c22DD22Guild Store Tools|r", {
+      {
+        label = "Copy Item Statistics to Chat",
+        callback = function() GUILDSTORETOOLS_StatsLinkMenu(link) end,
+        },
+        {
+          label = "Show Item Data",
+          callback = function() GUILDSTORETOOLS_ShowDataMenu(link) end,
+        }
+      })
+    ShowMenu()
+  end, 50)
+end
 
  -- Copied from MasterMerchant (MIT license. Copyright (c) 2014, Dan Stone (aka @khaibit) / Chris Lasswell (aka @Philgo68))
 function GUILDSTORETOOLS_LinkHandler_OnLinkMouseUp(link, button, control)
@@ -37,13 +54,28 @@ function GUILDSTORETOOLS_LinkHandler_OnLinkMouseUp(link, button, control)
     if (not handled) then
             GST_Original_ZO_LinkHandler_OnLinkMouseUp(link, button, control)
             if (button == 2 and link ~= '') then        
-              AddMenuItem("Item Statistics", function() GUILDSTORETOOLS_StatsLinkMenu(link) end)
+                AddCustomSubMenuItem("|c22DD22Guild Store Tools|r", {
+                  {
+                    label = "Copy Item Statistics to Chat",
+                    callback = function() GUILDSTORETOOLS_StatsLinkMenu(link) end,
+                  },
+                  {
+                    label = "Show Item Data",
+                    callback = function() GUILDSTORETOOLS_ShowDataMenu(link) end,
+                  }
+                })
                 ShowMenu(control)
             end
         end
     end
 end
 -- END
+
+local selectedItem
+
+function GUILDSTORETOOLS_OnHideTooltip(tip)
+  selectedItem = nil
+end
 
 function GUILDSTORETOOLS_OnTooltip(tip)
   local item = GUILDSTORETOOLS_GetItemLinkFromMOC()
@@ -66,9 +98,12 @@ function GUILDSTORETOOLS_OnTooltip(tip)
         "   median: " .. ESODR_CurrencyToText(data["median"]) ..
         "   75th: " .. ESODR_CurrencyToText(data["p75th"])
         , "ZoFontGame", 255,255,255)
+
     end
   end  
 end
+
+
 
 function GUILDSTORETOOLS_GetItemLinkFromMOC()
   local item = moc()
@@ -89,7 +124,6 @@ function GUILDSTORETOOLS_GetItemLinkFromMOC()
       return GetTradingHouseListingItemLink(item.dataEntry.data.slotIndex)
     end
   end
-  
   return nil
 end
 
@@ -128,4 +162,26 @@ function GUILDSTORETOOLS_StatsLinkMenu(l)
     "   75th: " .. ESODR_CurrencyToText(data["p75th"]))
 end
 
+function GUILDSTORETOOLS_ShowDataMenu(l)
+
+  GuildStoreToolsWindow:SetHidden(false)
+  local data = GUILDSTORETOOLS_GetStatistics(l)
+  
+  GuildStoreToolsWindow_Name:SetText(GetItemLinkName(l))
+  
+  if not data then
+    GuildStoreToolsWindow_Sales:SetText("No Sales History")
+    GuildStoreToolsWindow_Stats:SetText("")
+    return
+  end
+  
+  GuildStoreToolsWindow_Sales:SetText( ESODR_NumberToText(data["count"]) .. 
+        " sales and " .. ESODR_NumberToText(data["sum"]) .. 
+        " items.")
+        
+  GuildStoreToolsWindow_Stats:SetText(
+        "25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
+        "   median: " .. ESODR_CurrencyToText(data["median"]) ..
+        "   75th: " .. ESODR_CurrencyToText(data["p75th"])) 
+end
 
