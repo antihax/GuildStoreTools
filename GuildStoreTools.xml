@@ -4,6 +4,9 @@
          <OnInitialized>GUILDSTORETOOLS_Window_OnInitialized(self)</OnInitialized>
          <Anchor point="BOTTOM" relativeTo="GuiRoot" relativePoint="CENTER" offsetY="-20" />
          <Dimensions x="650" y="600" />
+         <OnMoveStop>
+        	GUILDSTORETOOLS_OnMoveStop()
+      	 </OnMoveStop>
          <Controls>
             <Backdrop name="$(parent)Bg" inherits="ZO_DefaultBackdrop" movable="true">
                <AnchorFill />

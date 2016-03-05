@@ -3,6 +3,12 @@ local versionString = "v0.1.5"
 local serverName = ""
 local GST_Original_ZO_LinkHandler_OnLinkMouseUp 
 GUILDSTORETOOLS_units = {}
+GUILDSTORETOOLS_Variables = {}
+
+local defaults = {
+  left = 0,
+  top = 0
+}
 
 local UnitList = ZO_SortFilterList:Subclass()
 UnitList.defaults = {}
@@ -85,6 +91,11 @@ function UnitList:SetupUnitRow(control, data)
   ZO_SortFilterList.SetupRow(self, control, data)
 end
 
+function GUILDSTORETOOLS_OnMoveStop()
+  GUILDSTORETOOLS_Variables.left = GuildStoreToolsWindow:GetLeft()
+  GUILDSTORETOOLS_Variables.top = GuildStoreToolsWindow:GetTop()
+end
+
  -- Main entrypoint
 function GUILDSTORETOOLS_addonLoaded(eventCode, name)
   -- Prevent loading twice
@@ -92,6 +103,9 @@ function GUILDSTORETOOLS_addonLoaded(eventCode, name)
 
   -- get the serverName
   serverName = getServerName()
+
+  -- Saved Variables
+  GUILDSTORETOOLS_Variables = ZO_SavedVars:NewAccountWide("GuildStoreToolsSavedVariables", 1, "Position", defaults)
 
   -- Hook the link handler right click.
   GST_Original_ZO_LinkHandler_OnLinkMouseUp = ZO_LinkHandler_OnLinkMouseUp
@@ -102,6 +116,9 @@ function GUILDSTORETOOLS_addonLoaded(eventCode, name)
   ZO_PreHookHandler(ItemTooltip, "OnHide",   function(c, ...) GUILDSTORETOOLS_OnHideTooltip(c) end)
   
   ZO_PreHook("ZO_InventorySlot_ShowContextMenu", function(c) GUILDSTORETOOLS_InventoryContextMenu(c) end)
+  
+  GuildStoreToolsWindow:ClearAnchors()
+  GuildStoreToolsWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, GUILDSTORETOOLS_Variables.left, GUILDSTORETOOLS_Variables.top)
 end
 EVENT_MANAGER:RegisterForEvent("GuildStoreTools", EVENT_ADD_ON_LOADED, GUILDSTORETOOLS_addonLoaded)
 

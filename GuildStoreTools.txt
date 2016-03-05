@@ -1,9 +1,9 @@
 ## Title: GuildStoreTools
 ## Author: @croakroach (Danni)
-## Description: Merges observed market data into one searchable store. Requires ESO Data Relay installed.
-## Version: 0.0.1
+## Description: Displays statistics and observed items for sale. Requires ESO Data Relay installed.
+## Version: 0.5.5
 ## APIVersion: 100013
-## SavedVariables: GuildStoreTools
+## SavedVariables: GuildStoreToolsSavedVariables
 ## DependsOn: ESODataRelay
 
 GuildStoreTools.lua
