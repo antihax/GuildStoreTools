@@ -2,6 +2,17 @@ local addonName = "GuildStoreTools"
 local versionString = "v0.1.5"
 local serverName = ""
 local GST_Original_ZO_LinkHandler_OnLinkMouseUp 
+GUILDSTORETOOLS_units = {}
+
+local UnitList = ZO_SortFilterList:Subclass()
+UnitList.defaults = {}
+UnitList.SORT_KEYS = {
+    ["eaPrice"] = {isNumeric=true},
+    ["price"] = {isNumeric=true},
+    ["stackCount"] = {isNumeric=true},
+    ["npcName"] = {},
+    ["zoneName"] = {} 
+}
 
 -- Returns a string with the server name.
 local function getServerName() 
@@ -9,6 +20,69 @@ local function getServerName()
   local uniqueName = GetUniqueNameForCharacter(charName)
   local serverName = string.sub(uniqueName, 1, string.find(uniqueName, charName)-2)
   return serverName
+end
+
+function UnitList:New(...)
+  self.currentSortKey = "eaPrice"
+  self.currentSortOrder = ZO_SORT_ORDER_UP
+  return ZO_SortFilterList.New(self, ...)
+end
+
+function UnitList:Initialize(control, sv)
+  self.masterList = {}
+  ZO_SortFilterList.Initialize(self, control)
+  ZO_ScrollList_AddDataType(self.list, 1, "DataUnitRow", 30, function(...) self:SetupUnitRow(...) end)
+  ZO_ScrollList_EnableHighlight(self.list, "ZO_ThinListHighlight")
+  self.sortFunction = function(listEntry1, listEntry2) return ZO_TableOrderingFunction(listEntry1.data, listEntry2.data, self.currentSortKey, UnitList.SORT_KEYS, self.currentSortOrder) end
+  self:RefreshData()
+end
+
+function UnitList:Refresh()
+  self:RefreshData()
+end
+
+function UnitList:BuildMasterList()
+  self.masterList = GUILDSTORETOOLS_units
+  
+  -- Since we do not have price each in the data, we must build them here.
+  -- This is to save bandwidth since we can locally generate these data.
+  for i = 1, #self.masterList do
+    local data = self.masterList[i]
+    data.eaPrice = data.price/data.stackCount
+  end
+end
+
+function UnitList:FilterScrollList()
+    if not self.masterList then return end
+    
+    local scrollData = ZO_ScrollList_GetDataList(self.list)
+    ZO_ClearNumericallyIndexedTable(scrollData)
+
+    for i = 1, #self.masterList do
+        local data = self.masterList[i]
+      table.insert(scrollData, ZO_ScrollList_CreateDataEntry(1, data))
+    end    
+end
+
+function UnitList:SortScrollList()
+    local scrollData = ZO_ScrollList_GetDataList(self.list)
+    table.sort(scrollData, self.sortFunction)
+end
+
+function UnitList:SetupUnitRow(control, data)
+  control.eaPrice = GetControl(control, "EAPrice")
+  control.price = GetControl(control, "Price")
+  control.stackSize = GetControl(control, "StackSize")
+  control.npcName = GetControl(control, "NPC")
+  control.zoneName = GetControl(control, "Zone")
+  
+  control.eaPrice:SetText(ESODR_CurrencyToText(data.eaPrice))
+  control.price:SetText(ESODR_NumberToText(data.price))
+  control.stackSize:SetText(data.stackCount)
+  control.npcName:SetText(data.npcName)
+  control.zoneName:SetText(data.zoneName)
+  control.data = data
+  ZO_SortFilterList.SetupRow(self, control, data)
 end
 
  -- Main entrypoint
@@ -33,7 +107,7 @@ EVENT_MANAGER:RegisterForEvent("GuildStoreTools", EVENT_ADD_ON_LOADED, GUILDSTOR
 
 function GUILDSTORETOOLS_InventoryContextMenu(c)
   zo_callLater(function() 
-    AddCustomSubMenuItem("|c22DD22Guild Store Tools|r", {
+    AddCustomSubMenuItem("|cAFEBFFGuild Store Tools|r", {
       {
         label = "Copy Item Statistics to Chat",
         callback = function() GUILDSTORETOOLS_StatsLinkMenu(link) end,
@@ -54,7 +128,7 @@ function GUILDSTORETOOLS_LinkHandler_OnLinkMouseUp(link, button, control)
     if (not handled) then
             GST_Original_ZO_LinkHandler_OnLinkMouseUp(link, button, control)
             if (button == 2 and link ~= '') then        
-                AddCustomSubMenuItem("|c22DD22Guild Store Tools|r", {
+                AddCustomSubMenuItem("|cAFEBFFGuild Store Tools|r", {
                   {
                     label = "Copy Item Statistics to Chat",
                     callback = function() GUILDSTORETOOLS_StatsLinkMenu(link) end,
@@ -103,8 +177,6 @@ function GUILDSTORETOOLS_OnTooltip(tip)
   end  
 end
 
-
-
 function GUILDSTORETOOLS_GetItemLinkFromMOC()
   local item = moc()
   if not item or not item.GetParent then return nil end
@@ -118,7 +190,6 @@ function GUILDSTORETOOLS_GetItemLinkFromMOC()
       return GetStoreItemLink(item.dataEntry.data.slotIndex, LINK_STYLE_DEFAULT)
     elseif parentName == "ZO_TradingHouseItemPaneSearchResultsContents" 
       and item.dataEntry and item.dataEntry.data and item.dataEntry.data.timeRemaining then
-      
       return GetTradingHouseSearchResultItemLink(item.dataEntry.data.slotIndex)
     elseif parentName == "ZO_TradingHousePostedItemsListContents" then
       return GetTradingHouseListingItemLink(item.dataEntry.data.slotIndex)
@@ -175,13 +246,25 @@ function GUILDSTORETOOLS_ShowDataMenu(l)
     return
   end
   
-  GuildStoreToolsWindow_Sales:SetText( ESODR_NumberToText(data["count"]) .. 
-        " sales and " .. ESODR_NumberToText(data["sum"]) .. 
-        " items.")
+  GuildStoreToolsWindow_Sales:SetText("Observed " .. ESODR_NumberToText(data["count"]) .. 
+        " sales totaling " .. ESODR_NumberToText(data["sum"]) .. 
+        " items within " .. data["days"] .. " days.")
         
   GuildStoreToolsWindow_Stats:SetText(
-        "25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
+        "5th: " .. ESODR_CurrencyToText(data["p5th"]) ..
+        "  25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
         "   median: " .. ESODR_CurrencyToText(data["median"]) ..
-        "   75th: " .. ESODR_CurrencyToText(data["p75th"])) 
+        "   75th: " .. ESODR_CurrencyToText(data["p75th"]) ..
+        "   95th: " .. ESODR_CurrencyToText(data["p95th"]))
+        
+  local itemID = ESODR_ItemIDFromLink(l)
+  local uniqueID = ESODR_UniqueIDFromLink(l)
+  
+  GUILDSTORETOOLS_units = ESODR_GetGuildStoreItemTable(itemID, uniqueID)
+  if not GUILDSTORETOOLS_units then GUILDSTORETOOLS_units = {} end
+  GUILDSTORETOOLS_List:Refresh()
 end
 
+function GUILDSTORETOOLS_Window_OnInitialized(control)
+  GUILDSTORETOOLS_List = UnitList:New(control)
+end

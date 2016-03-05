@@ -1,22 +1,25 @@
 <GuiXml>
    <Controls>
       <TopLevelControl name="GuildStoreToolsWindow" clampedToScreen="true" DrawLayer="3" mouseEnabled="true" movable="true" hidden="true">
+         <OnInitialized>GUILDSTORETOOLS_Window_OnInitialized(self)</OnInitialized>
          <Anchor point="BOTTOM" relativeTo="GuiRoot" relativePoint="CENTER" offsetY="-20" />
-         <Dimensions x="400" y="600" />
+         <Dimensions x="650" y="600" />
          <Controls>
-
             <Backdrop name="$(parent)Bg" inherits="ZO_DefaultBackdrop" movable="true">
                <AnchorFill />
             </Backdrop>
             <Button name="$(parent)Close" inherits="ZO_CloseButton" excludeFromResizeToFitExtents="true">
-                <OnClicked>
-            		GuildStoreToolsWindow:SetHidden(true)
-          		</OnClicked>
+               <OnClicked>GuildStoreToolsWindow:SetHidden(true)</OnClicked>
                <Anchor point="TOPRIGHT" offsetX="-4" offsetY="4" />
             </Button>
             <Label name="$(parent)Title" text="Guild Store Items" font="ZoFontWinH2" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SELECTED">
                <Anchor point="TOP" offsetY="6" />
             </Label>
+            <Texture name="$(parent)Divider" textureFile="EsoUI/Art/Miscellaneous/horizontalDivider.dds" excludeFromResizeToFitExtents="true">
+               <Dimensions y="4" />
+               <Anchor point="TOPLEFT" relativeTo="$(parent)Bg" relativePoint="TOPLEFT" offsetY="34" />
+               <Anchor point="TOPRIGHT" relativeTo="$(parent)Bg" relativePoint="TOPRIGHT" offsetY="34" />
+            </Texture>
             <Label name="$(parent)_Name" text="" font="ZoFontWinH3" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SELECTED">
                <Anchor point="TOP" offsetY="40" />
             </Label>
@@ -25,13 +28,73 @@
             </Label>
             <Label name="$(parent)_Stats" text="" font="ZoFontGame" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SELECTED">
                <Anchor point="TOP" offsetY="90" />
-            </Label>            
-            <Texture name="$(parent)Divider" textureFile="EsoUI/Art/Miscellaneous/horizontalDivider.dds" excludeFromResizeToFitExtents="true">
-               <Dimensions y="4" />
-               <Anchor point="TOPLEFT" relativeTo="$(parent)Bg" relativePoint="TOPLEFT" offsetY="34" />
-               <Anchor point="TOPRIGHT" relativeTo="$(parent)Bg" relativePoint="TOPRIGHT" offsetY="34" />
-            </Texture>
+            </Label>
+            <Label name="$(parent)Observed" text="Observed Store Prices" font="ZoFontWinH3" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SELECTED">
+               <Anchor point="TOP" relativeTo="$(parent)_Stats" relativePoint="BOTTOM" offsetY="20" />
+            </Label>
+
+            <Control name="$(parent)Headers">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)Bg" RelativePoint="TOPLEFT" offsetY="150" />
+               <Dimensions y="32" />
+               <Controls>
+                  <Control name="$(parent)EAPrice" inherits="ZO_SortHeader">
+                     <OnInitialized>ZO_SortHeader_Initialize(self, "Price Ea", "eaPrice", ZO_SORT_ORDER_DOWN, TEXT_ALIGN_CENTER, "ZoFontGameLargeBold")</OnInitialized>
+                     <Anchor point="TOPLEFT" />
+                     <Dimensions x="130" y="32" />
+                  </Control>
+                  <Control name="$(parent)Price" inherits="ZO_SortHeader">
+                     <OnInitialized>ZO_SortHeader_Initialize(self, "Price", "price", ZO_SORT_ORDER_DOWN, TEXT_ALIGN_CENTER, "ZoFontGameLargeBold")</OnInitialized>
+                     <Anchor point="TOPLEFT" relativeTo="$(parent)EAPrice" relativePoint="TOPRIGHT" />
+                     <Dimensions x="130" y="32" />
+                  </Control>
+                  <Control name="$(parent)StackSize" inherits="ZO_SortHeader">
+                     <OnInitialized>ZO_SortHeader_Initialize(self, "#", "stackCount", ZO_SORT_ORDER_DOWN, TEXT_ALIGN_CENTER, "ZoFontGameLargeBold")</OnInitialized>
+                     <Anchor point="TOPLEFT" relativeTo="$(parent)Price" relativePoint="TOPRIGHT" />
+                     <Dimensions x="60" y="32" />
+                  </Control>
+                  <Control name="$(parent)NPC" inherits="ZO_SortHeader">
+                     <OnInitialized>ZO_SortHeader_Initialize(self, "NPC", "npcName", ZO_SORT_ORDER_DOWN, TEXT_ALIGN_CENTER, "ZoFontGameLargeBold")</OnInitialized>
+                     <Anchor point="TOPLEFT" relativeTo="$(parent)StackSize" relativePoint="TOPRIGHT" />
+                     <Dimensions x="150" y="32" />
+                  </Control>
+                  <Control name="$(parent)Zone" inherits="ZO_SortHeader">
+                     <OnInitialized>ZO_SortHeader_Initialize(self, "Zone", "zoneName", ZO_SORT_ORDER_UP, TEXT_ALIGN_CENTER, "ZoFontGameLargeBold")</OnInitialized>
+                     <Anchor point="TOPLEFT" relativeTo="$(parent)NPC" relativePoint="TOPRIGHT" />
+                     <Dimensions x="150" y="32" />
+                  </Control>
+               </Controls>
+            </Control>
+            <Control name="$(parent)List" inherits="ZO_ScrollList">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)Headers" relativePoint="BOTTOMLEFT" />
+               <Anchor point="BOTTOMRIGHT" offsetX="-12" offsetY="-64" />
+            </Control>
          </Controls>
       </TopLevelControl>
+      <Button name="DataUnitRow" virtual="true">
+         <Dimensions y="30" />
+         <Anchor point="RIGHT" relativeTo="$(parent)" />
+         <Controls>
+            <Label name="$(parent)EAPrice" font="ZoFontChat" horizontalAlignment="CENTER" wrapMode="ELLIPSIS">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)" />
+               <Dimensions x="130" y="32" />
+            </Label>
+            <Label name="$(parent)Price" font="ZoFontChat" horizontalAlignment="CENTER" wrapMode="ELLIPSIS">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)EAPrice" relativePoint="TOPRIGHT" />
+               <Dimensions x="130" y="32" />
+            </Label>
+            <Label name="$(parent)StackSize" font="ZoFontChat" horizontalAlignment="CENTER" wrapMode="ELLIPSIS">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)Price" relativePoint="TOPRIGHT" />
+               <Dimensions x="60" y="32" />
+            </Label>
+            <Label name="$(parent)NPC" font="ZoFontChat" horizontalAlignment="CENTER" wrapMode="ELLIPSIS">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)StackSize" relativePoint="TOPRIGHT" />
+               <Dimensions x="150" y="32" />
+            </Label>
+            <Label name="$(parent)Zone" font="ZoFontChat" horizontalAlignment="CENTER" wrapMode="ELLIPSIS">
+               <Anchor point="TOPLEFT" relativeTo="$(parent)NPC" relativePoint="TOPRIGHT" />
+               <Dimensions x="150" y="32" />
+            </Label>
+         </Controls>
+      </Button>
    </Controls>
 </GuiXml>
