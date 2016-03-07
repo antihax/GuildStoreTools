@@ -91,13 +91,24 @@ function UnitList:SetupUnitRow(control, data)
   ZO_SortFilterList.SetupRow(self, control, data)
 end
 
+local function checkForESODataRelay()
+  if not ESODataRelay then
+    d("********************************")
+    d("Guild Store Tools: ERROR!")
+    d("The ESO Data Relay addon is missing.\n\nPlease download and install ESO Data Relay from http://www.ESOUI.com.")
+    d("********************************")
+    -- Complain a lot.
+    zo_callLater(function() checkForESODataRelay() end, 1000 * 60 * 5)
+  end
+end
+
 function GUILDSTORETOOLS_OnMoveStop()
   GUILDSTORETOOLS_Variables.left = GuildStoreToolsWindow:GetLeft()
   GUILDSTORETOOLS_Variables.top = GuildStoreToolsWindow:GetTop()
 end
 
  -- Main entrypoint
-function GUILDSTORETOOLS_addonLoaded(eventCode, name)
+local function GUILDSTORETOOLS_addonLoaded(eventCode, name)
   -- Prevent loading twice
   if name ~= addonName then return end
 
@@ -119,6 +130,9 @@ function GUILDSTORETOOLS_addonLoaded(eventCode, name)
   
   GuildStoreToolsWindow:ClearAnchors()
   GuildStoreToolsWindow:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, GUILDSTORETOOLS_Variables.left, GUILDSTORETOOLS_Variables.top)
+  
+  -- Check and report if the uploader is running or not.
+  zo_callLater(function() checkForESODataRelay() end, 2000)
 end
 EVENT_MANAGER:RegisterForEvent("GuildStoreTools", EVENT_ADD_ON_LOADED, GUILDSTORETOOLS_addonLoaded)
 
