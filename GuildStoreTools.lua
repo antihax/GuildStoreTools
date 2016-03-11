@@ -239,8 +239,13 @@ function GUILDSTORETOOLS_GetStatistics(l)
     if not data or data["count"] < 10 then
       days = 30
       data = ESODR_StatisticsForRange(ESODR_ItemIDFromLink(l), ESODR_UniqueIDFromLink(l), days)
+      if not data then
+        days = 7
+        data = ESODR_StatisticsForRange(ESODR_ItemIDFromLink(l), ESODR_UniqueIDFromLink(l), days)  
+      end  
     end
   end
+  
   if data then data["days"] = days end
   return data
 end
@@ -274,24 +279,26 @@ function GUILDSTORETOOLS_ShowDataMenu(l)
   if not data then
     GuildStoreToolsWindow_Sales:SetText("No Sales History")
     GuildStoreToolsWindow_Stats:SetText("")
-    return
-  end
+    
+  else
   
-  GuildStoreToolsWindow_Sales:SetText("Observed " .. ESODR_NumberToText(data["count"]) .. 
+    GuildStoreToolsWindow_Sales:SetText("Observed " .. ESODR_NumberToText(data["count"]) .. 
         " sales totaling " .. ESODR_NumberToText(data["sum"]) .. 
         " items within " .. data["days"] .. " days.")
         
-  GuildStoreToolsWindow_Stats:SetText(
+    GuildStoreToolsWindow_Stats:SetText(
         "5th: " .. ESODR_CurrencyToText(data["p5th"]) ..
         "  25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
         "   median: " .. ESODR_CurrencyToText(data["median"]) ..
         "   75th: " .. ESODR_CurrencyToText(data["p75th"]) ..
         "   95th: " .. ESODR_CurrencyToText(data["p95th"]))
-        
+  end
+  
   local itemID = ESODR_ItemIDFromLink(l)
   local uniqueID = ESODR_UniqueIDFromLink(l)
   
   GUILDSTORETOOLS_units = ESODR_GetGuildStoreItemTable(itemID, uniqueID)
+
   if not GUILDSTORETOOLS_units then GUILDSTORETOOLS_units = {} end
   GUILDSTORETOOLS_List:Refresh()
 end
