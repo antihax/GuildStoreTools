@@ -231,15 +231,20 @@ end
 
 function GUILDSTORETOOLS_GetStatistics(l)
   local days = 7
-  local data = nil
+  local data = nil 
+  local days7count = 0
+
   local data = ESODR_StatisticsForRange(ESODR_ItemIDFromLink(l), ESODR_UniqueIDFromLink(l), days)
+  if data then days7count = data["count"] end
   if not data or data["count"] < 10 then 
     days = 15
     data = ESODR_StatisticsForRange(ESODR_ItemIDFromLink(l), ESODR_UniqueIDFromLink(l), days)
     if not data or data["count"] < 10 then
       days = 30
       data = ESODR_StatisticsForRange(ESODR_ItemIDFromLink(l), ESODR_UniqueIDFromLink(l), days)
-      if not data then
+      
+      -- Fall back to 7 days if the count is the same.
+      if not data or data["count"] == days7count then
         days = 7
         data = ESODR_StatisticsForRange(ESODR_ItemIDFromLink(l), ESODR_UniqueIDFromLink(l), days)  
       end  
@@ -259,14 +264,21 @@ function GUILDSTORETOOLS_StatsLinkMenu(l)
   
   local ChatEditControl = CHAT_SYSTEM.textEntry.editControl
   if (not ChatEditControl:HasFocus()) then StartChatInput() end
-  ChatEditControl:InsertText(
-    l .. 
+  
+  local chatText =  l .. 
     " " .. data["days"] .. " days: " .. ESODR_NumberToText(data["count"]) .. 
     " sales/" .. ESODR_NumberToText(data["sum"]) .. 
-    " items. Price Stats: " ..  
-    "   25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
+    " items. "
+  
+  if data["count"] > 2 then
+    chatText = chatText .. "Price Range:   25%: " .. ESODR_CurrencyToText(data["p25th"]) ..
     "   median: " .. ESODR_CurrencyToText(data["median"]) ..
-    "   75th: " .. ESODR_CurrencyToText(data["p75th"]))
+    "   75%: " .. ESODR_CurrencyToText(data["p75th"]) 
+  else
+    chatText = chatText .. "Median: " .. ESODR_CurrencyToText(data["median"])
+  end
+  ChatEditControl:InsertText(chatText)
+
 end
 
 function GUILDSTORETOOLS_ShowDataMenu(l)
