@@ -1,5 +1,5 @@
 local addonName = "GuildStoreTools"
-local versionString = "v0.1.5"
+local versionString = "v0.1.8"
 local serverName = ""
 local GST_Original_ZO_LinkHandler_OnLinkMouseUp 
 GUILDSTORETOOLS_units = {}
@@ -19,6 +19,66 @@ UnitList.SORT_KEYS = {
     ["npcName"] = {},
     ["zoneName"] = {} 
 }
+
+function GUILDSTORETOOLS_StatsLinkMenu(l)
+  local data = GUILDSTORETOOLS_GetStatistics(l)
+  if not data then
+    d("No data available for " .. l .. ".")
+    return
+  end
+  
+  local ChatEditControl = CHAT_SYSTEM.textEntry.editControl
+  if (not ChatEditControl:HasFocus()) then StartChatInput() end
+  
+  local chatText =  l .. 
+    " " .. data["days"] .. " days: " .. ESODR_NumberToText(data["count"]) .. 
+    " sales/" .. ESODR_NumberToText(data["sum"]) .. 
+    " items. "
+  
+  if data["count"] > 2 then
+    chatText = chatText .. "Price Range:   25%: " .. ESODR_CurrencyToText(data["p25th"]) ..
+    "   median: " .. ESODR_CurrencyToText(data["median"]) ..
+    "   75%: " .. ESODR_CurrencyToText(data["p75th"]) 
+  else
+    chatText = chatText .. "Median: " .. ESODR_CurrencyToText(data["median"])
+  end
+  ChatEditControl:InsertText(chatText)
+
+end
+
+function GUILDSTORETOOLS_ShowDataMenu(l)
+
+  GuildStoreToolsWindow:SetHidden(false)
+  local data = GUILDSTORETOOLS_GetStatistics(l)
+  
+  GuildStoreToolsWindow_Name:SetText(GetItemLinkName(l))
+  
+  if not data then
+    GuildStoreToolsWindow_Sales:SetText("No Sales History")
+    GuildStoreToolsWindow_Stats:SetText("")
+    
+  else
+  
+    GuildStoreToolsWindow_Sales:SetText("Observed " .. ESODR_NumberToText(data["count"]) .. 
+        " sales totaling " .. ESODR_NumberToText(data["sum"]) .. 
+        " items within " .. data["days"] .. " days.")
+        
+    GuildStoreToolsWindow_Stats:SetText(
+        "5th: " .. ESODR_CurrencyToText(data["p5th"]) ..
+        "  25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
+        "   median: " .. ESODR_CurrencyToText(data["median"]) ..
+        "   75th: " .. ESODR_CurrencyToText(data["p75th"]) ..
+        "   95th: " .. ESODR_CurrencyToText(data["p95th"]))
+  end
+  
+  local itemID = ESODR_ItemIDFromLink(l)
+  local uniqueID = ESODR_UniqueIDFromLink(l)
+  
+  GUILDSTORETOOLS_units = ESODR_GetGuildStoreItemTable(itemID, uniqueID)
+
+  if not GUILDSTORETOOLS_units then GUILDSTORETOOLS_units = {} end
+  GUILDSTORETOOLS_List:Refresh()
+end
 
 -- Returns a string with the server name.
 local function getServerName() 
@@ -255,65 +315,7 @@ function GUILDSTORETOOLS_GetStatistics(l)
   return data
 end
 
-function GUILDSTORETOOLS_StatsLinkMenu(l)
-  local data = GUILDSTORETOOLS_GetStatistics(l)
-  if not data then
-    d("No data available for " .. l .. ".")
-    return
-  end
-  
-  local ChatEditControl = CHAT_SYSTEM.textEntry.editControl
-  if (not ChatEditControl:HasFocus()) then StartChatInput() end
-  
-  local chatText =  l .. 
-    " " .. data["days"] .. " days: " .. ESODR_NumberToText(data["count"]) .. 
-    " sales/" .. ESODR_NumberToText(data["sum"]) .. 
-    " items. "
-  
-  if data["count"] > 2 then
-    chatText = chatText .. "Price Range:   25%: " .. ESODR_CurrencyToText(data["p25th"]) ..
-    "   median: " .. ESODR_CurrencyToText(data["median"]) ..
-    "   75%: " .. ESODR_CurrencyToText(data["p75th"]) 
-  else
-    chatText = chatText .. "Median: " .. ESODR_CurrencyToText(data["median"])
-  end
-  ChatEditControl:InsertText(chatText)
 
-end
-
-function GUILDSTORETOOLS_ShowDataMenu(l)
-
-  GuildStoreToolsWindow:SetHidden(false)
-  local data = GUILDSTORETOOLS_GetStatistics(l)
-  
-  GuildStoreToolsWindow_Name:SetText(GetItemLinkName(l))
-  
-  if not data then
-    GuildStoreToolsWindow_Sales:SetText("No Sales History")
-    GuildStoreToolsWindow_Stats:SetText("")
-    
-  else
-  
-    GuildStoreToolsWindow_Sales:SetText("Observed " .. ESODR_NumberToText(data["count"]) .. 
-        " sales totaling " .. ESODR_NumberToText(data["sum"]) .. 
-        " items within " .. data["days"] .. " days.")
-        
-    GuildStoreToolsWindow_Stats:SetText(
-        "5th: " .. ESODR_CurrencyToText(data["p5th"]) ..
-        "  25th: " .. ESODR_CurrencyToText(data["p25th"]) ..
-        "   median: " .. ESODR_CurrencyToText(data["median"]) ..
-        "   75th: " .. ESODR_CurrencyToText(data["p75th"]) ..
-        "   95th: " .. ESODR_CurrencyToText(data["p95th"]))
-  end
-  
-  local itemID = ESODR_ItemIDFromLink(l)
-  local uniqueID = ESODR_UniqueIDFromLink(l)
-  
-  GUILDSTORETOOLS_units = ESODR_GetGuildStoreItemTable(itemID, uniqueID)
-
-  if not GUILDSTORETOOLS_units then GUILDSTORETOOLS_units = {} end
-  GUILDSTORETOOLS_List:Refresh()
-end
 
 function GUILDSTORETOOLS_Window_OnInitialized(control)
   GUILDSTORETOOLS_List = UnitList:New(control)
