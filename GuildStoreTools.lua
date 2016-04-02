@@ -1,5 +1,5 @@
 local addonName = "GuildStoreTools"
-local versionString = "v0.1.8"
+local versionString = "v0.7.3"
 local serverName = ""
 local GST_Original_ZO_LinkHandler_OnLinkMouseUp 
 GUILDSTORETOOLS_units = {}
@@ -21,6 +21,11 @@ UnitList.SORT_KEYS = {
 }
 
 function GUILDSTORETOOLS_StatsLinkMenu(l)
+  if not l then
+    d("Error: no information available")
+    return
+  end
+  
   local data = GUILDSTORETOOLS_GetStatistics(l)
   if not data then
     d("No data available for " .. l .. ".")
@@ -47,7 +52,11 @@ function GUILDSTORETOOLS_StatsLinkMenu(l)
 end
 
 function GUILDSTORETOOLS_ShowDataMenu(l)
-
+  if not l then
+    d("Error: no information available")
+    return
+  end
+  
   GuildStoreToolsWindow:SetHidden(false)
   local data = GUILDSTORETOOLS_GetStatistics(l)
   
@@ -197,6 +206,8 @@ end
 EVENT_MANAGER:RegisterForEvent("GuildStoreTools", EVENT_ADD_ON_LOADED, GUILDSTORETOOLS_addonLoaded)
 
 function GUILDSTORETOOLS_InventoryContextMenu(c)
+  local bag, i = ZO_Inventory_GetBagAndIndex(c)
+  link = GetItemLink(bag, i)
   zo_callLater(function() 
     AddCustomSubMenuItem("|cAFEBFFGuild Store Tools|r", {
       {
