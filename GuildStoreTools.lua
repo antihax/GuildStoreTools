@@ -207,7 +207,7 @@ EVENT_MANAGER:RegisterForEvent("GuildStoreTools", EVENT_ADD_ON_LOADED, GUILDSTOR
 
 function GUILDSTORETOOLS_InventoryContextMenu(c)
   local bag, i = ZO_Inventory_GetBagAndIndex(c)
-  link = GetItemLink(bag, i)
+  local link = GetItemLink(bag, i)
   zo_callLater(function() 
     AddCustomSubMenuItem("|cAFEBFFGuild Store Tools|r", {
       {
