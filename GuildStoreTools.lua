@@ -1,5 +1,5 @@
 local addonName = "GuildStoreTools"
-local versionString = "v0.7.3"
+local versionString = "v0.7.4"
 local serverName = ""
 local GST_Original_ZO_LinkHandler_OnLinkMouseUp 
 GUILDSTORETOOLS_units = {}
@@ -89,14 +89,6 @@ function GUILDSTORETOOLS_ShowDataMenu(l)
   GUILDSTORETOOLS_List:Refresh()
 end
 
--- Returns a string with the server name.
-local function getServerName() 
-  local charName = GetUnitName("player")
-  local uniqueName = GetUniqueNameForCharacter(charName)
-  local serverName = string.sub(uniqueName, 1, string.find(uniqueName, charName)-2)
-  return serverName
-end
-
 function UnitList:New(...)
   self.currentSortKey = "eaPrice"
   self.currentSortOrder = ZO_SORT_ORDER_UP
@@ -180,9 +172,6 @@ end
 local function GUILDSTORETOOLS_addonLoaded(eventCode, name)
   -- Prevent loading twice
   if name ~= addonName then return end
-
-  -- get the serverName
-  serverName = getServerName()
 
   -- Saved Variables
   GUILDSTORETOOLS_Variables = ZO_SavedVars:NewAccountWide("GuildStoreToolsSavedVariables", 1, "Position", defaults)

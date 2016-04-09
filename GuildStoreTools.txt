@@ -1,7 +1,7 @@
 ## Title: GuildStoreTools
 ## Author: @croakroach (Danni)
 ## Description: Displays statistics and observed items for sale. Requires ESO Data Relay installed.
-## Version: 0.7.3
+## Version: 0.7.4
 ## APIVersion: 100014
 ## SavedVariables: GuildStoreToolsSavedVariables
 
